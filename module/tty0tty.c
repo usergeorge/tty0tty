@@ -374,7 +374,10 @@ static int tty0tty_write_room(struct tty_struct *tty)
 	}
 
 	/* calculate how much room is left in the device */
-	room = 255;
+	if (realbw)
+	    room = kfifo_avail(&tty0tty->fifo);
+	else
+	    room = 255;
 
 exit:
 	up(&tty0tty->sem);
