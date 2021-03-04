@@ -79,6 +79,10 @@ MODULE_PARM_DESC(realbw,
 #define MSR_DSR		0x40
 #define MSR_RI		0x80
 
+#define TIMER_INTERVAL (HZ/20)
+//#define TIMER_INTERVAL HZ
+#define TX_BUF_SIZE 4096
+
 static struct tty_port *tport;
 
 struct tty0tty_serial {
