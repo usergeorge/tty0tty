@@ -343,14 +343,19 @@ static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer,
 //        tty->low_latency=1;
 
 	if (ttyx != NULL) {
+		if (realbw) {
+			retval = kfifo_in(&tty0tty->fifo, buffer, count);
+		}
+		else {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,0)
-		tty_insert_flip_string(ttyx->port, buffer, count);
-		tty_flip_buffer_push(ttyx->port);
+			tty_insert_flip_string(ttyx->port, buffer, count);
+			tty_flip_buffer_push(ttyx->port);
 #else
-		tty_insert_flip_string(ttyx, buffer, count);
-		tty_flip_buffer_push(ttyx);
+			tty_insert_flip_string(ttyx, buffer, count);
+			tty_flip_buffer_push(ttyx);
 #endif
-		retval = count;
+			retval = count;
+		}
 	}
 
 exit:
