@@ -383,6 +383,25 @@ exit:
 
 static void tty0tty_timer_callback(struct timer_list * data)
 {
+	struct tty0tty_serial *tty0tty;
+	int i;
+	unsigned long current_jiffies = jiffies;
+
+#ifdef SCULL_DEBUG
+	printk(KERN_DEBUG "%s - jiffies %lu\n", __FUNCTION__, jiffies);
+#endif
+
+	// TODO: make delta_jiffies local variable
+	delta_jiffies = current_jiffies - last_timer_jiffies;
+	last_timer_jiffies = current_jiffies;
+
+	for (i = 0; i < 2 * pairs; i++) {
+		tty0tty = tty0tty_table[i];
+		tty0tty_async_do_write(tty0tty);
+	}
+
+	tty0tty_timer.expires += TIMER_INTERVAL;
+	add_timer(&tty0tty_timer);
 }
 
 #define RELEVANT_IFLAG(iflag) ((iflag) & (IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK))
