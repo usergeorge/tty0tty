@@ -55,6 +55,10 @@ short pairs = 4;		//Default number of pairs of devices
 module_param(pairs, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(pairs,
 		 "Number of pairs of devices to be created, maximum of 128");
+short realbw = 0;		//do throttle the bandwidth along the baud rate settings
+module_param(realbw, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(realbw,
+		 "Set to 1 to enable throttle the bandwith along the baud rate setting, default: disable");
 
 #if 0
 #define TTY0TTY_MAJOR		240	/* experimental range */
