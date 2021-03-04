@@ -796,6 +796,9 @@ static int __init tty0tty_init(void)
 
 	if (realbw) {
 		timer_setup(&tty0tty_timer, tty0tty_timer_callback, 0);
+                last_timer_jiffies = jiffies;
+                tty0tty_timer.expires = last_timer_jiffies + TIMER_INTERVAL;
+                add_timer(&tty0tty_timer);
 	}
 
 	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION "\n");
@@ -810,6 +813,11 @@ static void __exit tty0tty_exit(void)
 #ifdef SCULL_DEBUG
 	printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
+
+	if (realbw) {
+	    del_timer_sync(&tty0tty_timer);
+	}
+
 	for (i = 0; i < 2 * pairs; ++i) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0)
 		tty_port_destroy(&tport[i]);
