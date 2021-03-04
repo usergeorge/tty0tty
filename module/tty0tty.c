@@ -83,6 +83,9 @@ MODULE_PARM_DESC(realbw,
 //#define TIMER_INTERVAL HZ
 #define TX_BUF_SIZE 4096
 
+static struct timer_list tty0tty_timer;
+static unsigned long last_timer_jiffies;
+static unsigned long delta_jiffies;
 static struct tty_port *tport;
 
 struct tty0tty_serial {
