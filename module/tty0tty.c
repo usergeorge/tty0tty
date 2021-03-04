@@ -229,6 +229,87 @@ static void tty0tty_close(struct tty_struct *tty, struct file *file)
 		do_close(tty0tty);
 }
 
+static int tty0tty_do_write(struct tty0tty_serial *tty0tty, const unsigned char *buffer, int count)
+{
+	struct tty_struct *ttyx = NULL;
+	int retval = -EINVAL;
+
+#ifdef SCULL_DEBUG
+        printk(KERN_DEBUG "%s - \n", __FUNCTION__);
+#endif
+
+
+	if (0 >= tty0tty->open_count)
+		/* port was not opened */
+		goto exit;
+	if (0 >= count)
+	    /* no data to transfer */
+	    goto exit;
+
+
+	if ((tty0tty->tty->index % 2) == 0) {
+		if (tty0tty_table[tty0tty->tty->index + 1] != NULL)
+			if (tty0tty_table[tty0tty->tty->index + 1]->open_count >
+			    0)
+				ttyx =
+				    tty0tty_table[tty0tty->tty->index + 1]->tty;
+	} else {
+		if (tty0tty_table[tty0tty->tty->index - 1] != NULL)
+			if (tty0tty_table[tty0tty->tty->index - 1]->open_count >
+			    0)
+				ttyx =
+				    tty0tty_table[tty0tty->tty->index - 1]->tty;
+	}
+
+	if (ttyx != NULL) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,0)
+		tty_insert_flip_string(ttyx->port, buffer, count);
+		tty_flip_buffer_push(ttyx->port);
+#else
+		tty_insert_flip_string(ttyx, buffer, count);
+		tty_flip_buffer_push(ttyx);
+#endif
+		retval = count;
+	}
+exit:
+
+#ifdef SCULL_DEBUG
+	printk(KERN_DEBUG "%s - opposite index %p, write %d\n", __FUNCTION__, ttyx, retval);
+#endif
+
+	return retval;
+}
+
+static unsigned char drain[TX_BUF_SIZE];
+static int tty0tty_async_do_write(struct tty0tty_serial *tty0tty)
+{
+	unsigned nominal_bits;
+	unsigned chars;
+	int cnt;
+	int retval;
+
+	// TODO: think about correct return value -EINVAL?
+	if (tty0tty) {
+	    down(&tty0tty->sem);
+	    if (0 < tty0tty->open_count) {
+	        nominal_bits = tty0tty->tty->termios.c_ospeed * delta_jiffies / HZ;
+	        chars = nominal_bits / BITS_PER_TYPE(drain[0]);
+	        if (TX_BUF_SIZE < chars)
+	            chars = TX_BUF_SIZE;
+	        cnt = kfifo_out(&tty0tty->fifo, drain, chars);
+
+	        retval = tty0tty_do_write(tty0tty, drain, cnt);
+	    }
+	    else
+	        retval = 0;
+	    up(&tty0tty->sem);
+	}
+	else
+	    retval = 0;
+
+	return retval;
+}
+
 static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer,
 			 int count)
 {
