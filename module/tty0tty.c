@@ -36,6 +36,7 @@
 #include <linux/tty_flip.h>
 #include <linux/serial.h>
 #include <linux/sched.h>
+#include <linux/kfifo.h>
 #include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 #include <linux/sched/signal.h>
@@ -102,6 +103,7 @@ struct tty0tty_serial {
 	wait_queue_head_t wait;
 	struct async_icount icount;
 
+	struct kfifo fifo;      /* store data for throttled data transfer */
 };
 
 static struct tty0tty_serial **tty0tty_table;	/* initially all NULL */
