@@ -137,6 +137,10 @@ static int tty0tty_open(struct tty_struct *tty, struct file *file)
 
 	}
 
+	// TODO only alloc on the first open call
+	if (kfifo_alloc(&tty0tty->fifo, TX_BUF_SIZE, GFP_KERNEL))
+		return -ENOMEM;	// TODO 1st free() previous kmalloc
+
 	tport[index].tty = tty;
 	tty->port = &tport[index];
 
@@ -198,6 +202,8 @@ static void do_close(struct tty0tty_serial *tty0tty)
 				tty0tty_table[tty0tty->tty->index - 1]->msr =
 				    msr;
 	}
+
+	kfifo_free(&tty0tty->fifo); // TODO only free on the last close call
 
 	down(&tty0tty->sem);
 	if (!tty0tty->open_count) {
