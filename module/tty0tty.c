@@ -300,6 +300,10 @@ exit:
 	return room;
 }
 
+static void tty0tty_timer_callback(struct timer_list * data)
+{
+}
+
 #define RELEVANT_IFLAG(iflag) ((iflag) & (IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK))
 
 static void tty0tty_set_termios(struct tty_struct *tty,
@@ -685,6 +689,10 @@ static int __init tty0tty_init(void)
 		printk(KERN_ERR "failed to register tty0tty tty driver");
 		put_tty_driver(tty0tty_tty_driver);
 		return retval;
+	}
+
+	if (realbw) {
+		timer_setup(&tty0tty_timer, tty0tty_timer_callback, 0);
 	}
 
 	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION "\n");
